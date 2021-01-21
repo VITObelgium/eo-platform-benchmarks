@@ -8,7 +8,7 @@ from openeo.rest.connection import OpenEoApiError
 from shapely.geometry import shape
 from config import backend_data
 
-from timer import Timer
+from timeseries.timer import Timer
 
 
 class BenchMark:
