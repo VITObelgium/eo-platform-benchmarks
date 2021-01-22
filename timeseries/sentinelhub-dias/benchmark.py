@@ -2,14 +2,13 @@ from datetime import timedelta
 from os.path import abspath, dirname, join
 
 import geojson
-import matplotlib as mpl
-import matplotlib.pyplot as pl
 from fire import Fire
 from sentinelhub import FisRequest, CRS, DataCollection, Geometry, DownloadFailedException
 from sentinelhub import SHConfig
 from shapely.geometry import shape
 
 from timeseries.timer import Timer
+from timeseries.histogram import create_histogram
 
 
 class BenchMark:
@@ -22,7 +21,7 @@ class BenchMark:
         ]
 
         self._config = SHConfig()
-        self._config.instance_id = ''
+        self._config.instance_id = 'b3d8b1b7-4703-4116-a211-333a1a692482'
 
     def time_series(self):
         for endpoint in self._endpoints:
@@ -76,28 +75,7 @@ class BenchMark:
                 file.write(f"Mean: {timedelta(seconds=timings['stats']['mean'])}\n")
                 file.write(f"StDev: {timedelta(seconds=timings['stats']['stdev'])}\n")
 
-                BenchMark.create_histogram(result_path, timings['feature_timings'])
-
-    @staticmethod
-    def create_histogram(result_path, feature_timings):
-        pl.ioff()
-
-        def seconds_to_string(x, pos):
-            delta = str(timedelta(seconds=x))
-            split = delta.split(".")
-            if len(split) > 1:
-                split[-1] = split[-1].rstrip("0")
-            return ".".join(split)
-
-        formatter = mpl.ticker.FuncFormatter(seconds_to_string)
-        pl.subplots()[1].xaxis.set_major_formatter(formatter)
-
-        pl.hist(feature_timings)
-
-        pl.xlabel("Timings")
-        pl.ylabel("Frequency")
-
-        pl.savefig(f"{result_path}.png")
+                create_histogram(result_path, timings['feature_timings'])
 
 
 if __name__ == "__main__":

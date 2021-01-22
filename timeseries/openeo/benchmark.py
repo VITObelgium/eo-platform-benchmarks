@@ -1,14 +1,15 @@
-import os
 from datetime import timedelta
+from os.path import abspath, dirname, join
 
 import geojson
 import openeo
 from fire import Fire
 from openeo.rest.connection import OpenEoApiError
 from shapely.geometry import shape
-from config import backend_data
 
+from config import backend_data
 from timeseries.timer import Timer
+from timeseries.histogram import create_histogram
 
 
 class BenchMark:
@@ -24,42 +25,55 @@ class BenchMark:
         if not backend_data[backend]:
             return
 
-        print(f"Running benchmark on {backend}:\n")
+        result_path = f"./results/{backend}"
 
-        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'input_fields', 'europe_20_fields.geojson')) as f:
-            input_geojson = geojson.load(f)
+        with open(f"{result_path}.txt", "w+") as file:
+            file.write(f"Running benchmark on {backend}:\n\n")
 
-        t = Timer()
-        t.start()
+            with open(join(abspath(dirname(dirname(__file__))), 'input_fields', 'europe_20_fields.geojson')) as f:
+                input_geojson = geojson.load(f)
 
-        for i, f in enumerate(input_geojson.features):
-            print(f"Feature {i + 1}:\n")
+            t = Timer()
+            t.start()
 
-            polygon = shape(f["geometry"])
+            for i, f in enumerate(input_geojson.features):
+                file.write(f"Feature {i + 1}:\n\n")
 
-            temporal_extents = [["2020-01-01", "2020-05-31"], ["2020-06-01", "2020-10-31"]]
+                polygon = shape(f["geometry"])
 
-            for temporal_extent in temporal_extents:
-                print(f"{temporal_extent[0]} - {temporal_extent[1]}:\n")
-                try:
-                    connection = self._get_connection(backend)
+                temporal_extents = [["2020-01-01", "2020-05-31"], ["2020-06-01", "2020-10-31"]]
 
-                    result = connection \
-                        .load_collection(backend_data[backend]["collection"],
-                                         temporal_extent=temporal_extent,
-                                         bands=backend_data[backend]["bands"]) \
-                        .polygonal_mean_timeseries(polygon) \
-                        .execute()
+                for temporal_extent in temporal_extents:
+                    file.write(f"{temporal_extent[0]} - {temporal_extent[1]}:\n\n")
+                    try:
+                        connection = self._get_connection(backend)
 
-                    print(f"{result}\n")
-                except OpenEoApiError as e:
-                    print(f"Failed to execute request: {e}\n")
+                        result = connection \
+                            .load_collection(backend_data[backend]["collection"],
+                                             temporal_extent=temporal_extent,
+                                             bands=backend_data[backend]["bands"]) \
+                            .polygonal_mean_timeseries(polygon) \
+                            .execute()
 
-                print(f"Elapsed time for period: {timedelta(seconds=t.split_period())}\n")
+                        file.write(f"{result}\n\n")
+                    except OpenEoApiError as e:
+                        file.write(f"Failed to execute request: {e}\n\n")
 
-            print(f"Elapsed time for feature: {timedelta(seconds=t.split_feature())}\n")
+                    file.write(f"Elapsed time for period: {timedelta(seconds=t.split_period())}\n\n")
 
-        print(f"Total elapsed time: {timedelta(seconds=t.stop())}\n")
+                file.write(f"Elapsed time for feature: {timedelta(seconds=t.split_feature())}\n\n")
+
+            timings = t.stop()
+
+            file.write(f"Total elapsed time: {timedelta(seconds=timings['elapsed_time'])}\n\n")
+
+            file.write("Statistics:\n\n")
+            file.write(f"Min: {timedelta(seconds=timings['stats']['min'])}\n")
+            file.write(f"Max: {timedelta(seconds=timings['stats']['max'])}\n")
+            file.write(f"Mean: {timedelta(seconds=timings['stats']['mean'])}\n")
+            file.write(f"StDev: {timedelta(seconds=timings['stats']['stdev'])}\n")
+
+            create_histogram(result_path, timings['feature_timings'])
 
     @staticmethod
     def _get_connection(backend):
