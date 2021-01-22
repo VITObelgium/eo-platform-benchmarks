@@ -2,6 +2,8 @@ from datetime import timedelta
 from os.path import abspath, dirname, join
 
 import geojson
+import matplotlib as mpl
+import matplotlib.pyplot as pl
 from fire import Fire
 from sentinelhub import FisRequest, CRS, DataCollection, Geometry, DownloadFailedException
 from sentinelhub import SHConfig
@@ -20,11 +22,13 @@ class BenchMark:
         ]
 
         self._config = SHConfig()
-        self._config.instance_id = 'b3d8b1b7-4703-4116-a211-333a1a692482'
+        self._config.instance_id = ''
 
     def time_series(self):
         for endpoint in self._endpoints:
-            with open(f"./results/{endpoint.replace('https://', '')}.txt", "w+") as file:
+            result_path = f"./results/{endpoint.replace('https://', '')}"
+
+            with open(f"{result_path}.txt", "w+") as file:
                 file.write(f"Running benchmark on {endpoint}:\n\n")
 
                 self._config.sh_base_url = endpoint
@@ -50,7 +54,6 @@ class BenchMark:
                         geometry_list=[geometry],
                         time=temporal_extent,
                         resolution='10m',
-                        data_folder='./data',
                         config=self._config
                     )
 
@@ -63,7 +66,38 @@ class BenchMark:
 
                     file.write(f"Elapsed time for feature: {timedelta(seconds=t.split_feature())}\n\n")
 
-                file.write(f"Total elapsed time: {timedelta(seconds=t.stop())}\n")
+                timings = t.stop()
+
+                file.write(f"Total elapsed time: {timedelta(seconds=timings['elapsed_time'])}\n\n")
+
+                file.write("Statistics:\n\n")
+                file.write(f"Min: {timedelta(seconds=timings['stats']['min'])}\n")
+                file.write(f"Max: {timedelta(seconds=timings['stats']['max'])}\n")
+                file.write(f"Mean: {timedelta(seconds=timings['stats']['mean'])}\n")
+                file.write(f"StDev: {timedelta(seconds=timings['stats']['stdev'])}\n")
+
+                BenchMark.create_histogram(result_path, timings['feature_timings'])
+
+    @staticmethod
+    def create_histogram(result_path, feature_timings):
+        pl.ioff()
+
+        def seconds_to_string(x, pos):
+            delta = str(timedelta(seconds=x))
+            split = delta.split(".")
+            if len(split) > 1:
+                split[-1] = split[-1].rstrip("0")
+            return ".".join(split)
+
+        formatter = mpl.ticker.FuncFormatter(seconds_to_string)
+        pl.subplots()[1].xaxis.set_major_formatter(formatter)
+
+        pl.hist(feature_timings)
+
+        pl.xlabel("Timings")
+        pl.ylabel("Frequency")
+
+        pl.savefig(f"{result_path}.png")
 
 
 if __name__ == "__main__":

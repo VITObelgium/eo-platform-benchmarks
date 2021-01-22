@@ -1,4 +1,5 @@
 from time import perf_counter
+from statistics import mean, stdev
 
 
 class Timer:
@@ -7,6 +8,7 @@ class Timer:
         self._start_time = None
         self._feature_splits = None
         self._period_splits = None
+        self._stats = None
 
     def start(self):
         if self._start_time is not None:
@@ -43,9 +45,27 @@ class Timer:
         if self._start_time is None:
             return
 
+        self.split_period()
+
         elapsed_time = perf_counter() - self._start_time
+        feature_timings = self._feature_timings()
+
+        stats = {
+            "min": min(feature_timings),
+            "max": max(feature_timings),
+            "mean": mean(feature_timings),
+            "stdev": stdev(feature_timings)
+        }
+
         self._start_time = None
         self._feature_splits = None
         self._period_splits = None
 
-        return elapsed_time
+        return {
+            "elapsed_time": elapsed_time,
+            "stats": stats,
+            "feature_timings": feature_timings
+        }
+
+    def _feature_timings(self):
+        return [t - s for s, t in zip(self._feature_splits, self._feature_splits[1:])]
