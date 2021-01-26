@@ -41,7 +41,7 @@ class BenchMark:
 
                 polygon = shape(f["geometry"])
 
-                temporal_extents = [["2020-01-01", "2020-05-31"], ["2020-06-01", "2020-10-31"]]
+                temporal_extents = [["2020-01-01", "2020-10-31"]]
 
                 for temporal_extent in temporal_extents:
                     file.write(f"{temporal_extent[0]} - {temporal_extent[1]}:\n\n")

@@ -21,7 +21,7 @@ class BenchMark:
         ]
 
         self._config = SHConfig()
-        self._config.instance_id = 'b3d8b1b7-4703-4116-a211-333a1a692482'
+        self._config.instance_id = ''
 
     def time_series(self):
         for endpoint in self._endpoints:
