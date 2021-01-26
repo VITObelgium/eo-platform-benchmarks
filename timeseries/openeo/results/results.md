@@ -1,6 +1,6 @@
-#Openeo benchmark
+# Openeo benchmark
 
-##Stats
+## Stats
 
 | Backend | Min       | Max         | Mean        | StDev     |
 |---------|-----------|-------------|-------------|-----------|
@@ -9,12 +9,12 @@
 
 _* creo benchmark was done with 10 nodes_
 
-##Histograms
+## Histograms
 
-####vito
+#### vito
 
 ![image](./vito.png)
 
-####creo
+#### creo
 
 ![image](./creo.png)
