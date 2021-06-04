@@ -14,7 +14,6 @@ from shapely.geometry import shape
 import geopandas as gpd
 from shapely.ops import transform
 
-from timeseries.timer import Timer
 
 """
 

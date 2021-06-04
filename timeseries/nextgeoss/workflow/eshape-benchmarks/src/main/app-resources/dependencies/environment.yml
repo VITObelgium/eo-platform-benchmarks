@@ -1,0 +1,12 @@
+name: benchmarks
+channels:
+  - defaults
+dependencies:
+  - python=3.6.8
+  - geopandas
+  - rasterio
+  - geojson
+  - rasterstats
+  - numpy
+  - pip
+prefix: /opt/anaconda/envs/benchmarks

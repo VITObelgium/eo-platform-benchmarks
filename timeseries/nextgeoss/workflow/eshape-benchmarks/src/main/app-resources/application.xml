@@ -5,7 +5,7 @@
       <streamingExecutable>/application/process/run.sh</streamingExecutable>
      	<defaultParameters>  
             <!-- OpenSearch query parameters -->
-            <parameter id="startdate" abstract="Start Date"   title="Start Date"   scope="runtime" type="opensearch" target="time:start">2021-01-01</parameter>
+            <parameter id="startdate" abstract="Start Date"   title="Start Date"   scope="runtime" type="opensearch" target="time:start">2021-02-20</parameter>
             <parameter id="enddate"   abstract="End Date"     title="End Date"     scope="runtime" type="opensearch" target="time:end">2021-06-01</parameter>
             <parameter id="qbbox"     abstract="Bounding Box" title="Bounding Box" scope="runtime" type="opensearch" target="geo:box">-2.227906,55.656955,-2.221469,55.660054</parameter>
         </defaultParameters>
@@ -16,7 +16,7 @@
     <node id="node_process">
       <job id="template_process"/>
       <sources>
-      	<source refid="cas:series">https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L1C</source>
+      	<source refid="cas:series">https://catalogue-0.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L1C</source>
       </sources>
     </node>
   </workflow>
