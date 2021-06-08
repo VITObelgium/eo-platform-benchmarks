@@ -1,4 +1,4 @@
-URL="http://catalogue-0.nextgeoss.eu/opensearch/search.atom?productType=SENTINEL2_L1C&timerange_start=2021-02-20&timerange_end=2021-06-01&bbox=-2.227906,55.656955,-2.221469,55.660054&count=1&identifier=S2B_MSIL1C_20210221T113319_N0209_R080_T30UWG_20210221T122848"
+URL="http://catalogue-9.nextgeoss.eu/opensearch/search.atom?productType=SENTINEL2_L2A&bbox=5.186920166015626,51.23548217222581,5.217475891113282,51.25009723956958&timerange_start=2021-02-25&timerange_end=2021-06-06&identifier=S2A_MSIL2A_20210604T105031_N0300_R051_T31UFS_20210604T141149"
 
 function getosparams() {
         URL=$1	
@@ -33,9 +33,9 @@ mkdir -p $INPUT_DIR
 
 PARAMS=$(getosparams $URL)
 echo $PARAMS
-echo "opensearch-client $PARAMS -p count=1 https://catalogue-0.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L1C enclosure" > commands.log
+echo "opensearch-client $PARAMS -p count=1 https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L2A enclosure" > commands.log
 
-for enclosure in $(opensearch-client -v $PARAMS https://catalogue-0.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L1C enclosure); 
+for enclosure in $(opensearch-client -v $PARAMS https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L2A enclosure); 
 do
 	echo "Start 2 copy enclosure ${enclosure}"
         # Copy file to given input directory
