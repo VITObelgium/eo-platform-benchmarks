@@ -138,17 +138,20 @@ function main()
   ciop-log "INFO" "Copy the input bands to process dir ${processDir}"   
   mkdir -p ${processDir}
   cp ${inputDir}/*SAFE/GRANULE/*/IMG_DATA/R10m/*B0[2,3,4]_10m.jp2 ${processDir}/
-  ls -lh ${processDir}
- 
+
+  ciop-log "INFO" "Copying input geometry to file"
+  echo $(ciop-getparam geojson) >> ${processDir}/feature.geojson
+  cat ${processDir}/feature.geojson
+  ls -lh ${processDir} 
 
   ciop-log "INFO" "Process band information"
   local outputDir=${TMPDIR}/output-dir
-  local outputID=$(echo date '+%s')
+  local outputID=$(date '+%s')
   mkdir -p ${outputDir}
 
   source activate benchmarks
   cd ${_CIOP_APPLICATION_PATH}/process
-  python run.py -d ${processDir} -f .* -o ${outputDir}/result_${outputID}.json
+  python run.py -d ${processDir} -f ".*" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
  # Just pass the input reference to the next node 
   ciop-publish -m ${processDir}/result.json
 }

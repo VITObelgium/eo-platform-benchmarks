@@ -8,6 +8,43 @@
             <parameter id="startdate" abstract="Start Date"   title="Start Date"   scope="runtime" type="opensearch" target="time:start">2021-06-04</parameter>
             <parameter id="enddate"   abstract="End Date"     title="End Date"     scope="runtime" type="opensearch" target="time:end">2021-06-06</parameter>
             <parameter id="qbbox"     abstract="Bounding Box" title="Bounding Box" scope="runtime" type="opensearch" target="geo:box">5.186920166015626,51.23548217222581,5.217475891113282,51.25009723956958</parameter>
+            <parameter id="geojson"   abstract="GeoJSON to process" title="GeoJSON" scope="runtime">
+   {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.167908668518066,
+              51.23713465990539
+            ],
+            [
+              5.167179107666016,
+              51.23644948929002
+            ],
+            [
+              5.168144702911377,
+              51.236140487438554
+            ],
+            [
+              5.168852806091309,
+              51.23685253206427
+            ],
+            [
+              5.167908668518066,
+              51.23708092140239
+            ],
+            [
+              5.167908668518066,
+              51.23713465990539
+            ]
+          ]
+        ]
+      }
+    }
+	</parameter>
         </defaultParameters>
     </jobTemplate>
   </jobTemplates>
