@@ -107,12 +107,19 @@ function main()
   local input=${1}
   # Log the input
   log_input ${input}
-  
+ 
+  local outputID=$(date '+%s')
+
   # Setup some folder to store the input products
-  
   local inputDir=${TMPDIR}/file-input
   mkdir -p ${inputDir}
 
+  local processDir=${TMPDIR}/process-dir
+  mkdir -p ${processDir}
+
+  local outputDir=${TMPDIR}/output-dir
+  mkdir -p ${outputDir}
+ 
   params=$(getosparams $input)
   ciop-log "INFO" "Querying opensearch client with params $params"
   enclosure="$(opensearch-client $params https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L2A enclosure)"
@@ -122,36 +129,28 @@ function main()
   inputProduct="${inputProduct}$(basename ${enclosure})"
  
   ciop-log "INFO" "Downloaded product ${inputProduct} to ${inputDir}" 
-  #ls -lh ${inputDir}
- 
   [ $? -eq 0 ] && [ -e "${inputProduct}" ] || return ${ERR_NOINPUT}
 
   id=$([[ $input =~ .*identifier=(.*)\&? ]] && echo ${BASH_REMATCH[1]})
   newProduct="$(dirname $inputProduct)/${id}.zip"
+
   ciop-log "INFO" "Updating product ${inputProduct}  name to ${newProduct}"
   mv ${inputProduct} ${newProduct} 
-  #ls -lh ${newProduct} 
+ 
   ciop-log "INFO" "Unzipping ${newProduct}"
   unzip -qq ${newProduct} -d $inputDir
-  local processDir=${TMPDIR}/process-dir
-  ls -lh ${inputDir}
+  
   ciop-log "INFO" "Copy the input bands to process dir ${processDir}"   
-  mkdir -p ${processDir}
-  cp ${inputDir}/*SAFE/GRANULE/*/IMG_DATA/R10m/*B0[2,3,4]_10m.jp2 ${processDir}/
+  cp ${inputDir}/$(ciop-getparam filter) ${processDir}/
 
   ciop-log "INFO" "Copying input geometry to file"
   echo $(ciop-getparam geojson) >> ${processDir}/feature.geojson
-  cat ${processDir}/feature.geojson
-  ls -lh ${processDir} 
 
   ciop-log "INFO" "Process band information"
-  local outputDir=${TMPDIR}/output-dir
-  local outputID=$(date '+%s')
-  mkdir -p ${outputDir}
-
   source activate benchmarks
   cd ${_CIOP_APPLICATION_PATH}/process
-  python run.py -d ${processDir} -f ".*" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
- # Just pass the input reference to the next node 
-  ciop-publish -m ${processDir}/result.json
+  python run.py -d ${processDir} -f ".*jp2" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
+ 
+  ciop-log "INFO" "Publishing results" 
+  ciop-publish -m ${outputDir}/result_${outputID}.json
 }
