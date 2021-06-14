@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">
+    <ows:Identifier>{{WORKFLOW_IDENTIFIER}}</ows:Identifier>
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>startdate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>{{PARAM_START}}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>enddate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>{{PARAM_END}}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>qbbox</ows:Identifier>
+            <wps:Data>
+                <wps:BoundingBoxData>{{PARAM_BBOX}}</wps:BoundingBoxData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>geojson</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>{{PARAM_GEOMETRY}}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>filter</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>{{PARAM_FILTER}}</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <Identifier>_T2ApiKey</Identifier>
+            <wps:Data>
+                <wps:LiteralData>AKCp5bBh9WJnQLnAgtx5h5cyoZrBLTCMrbQURme5k8ZEypuZzxDKvkphq6piZFaWhY4wofCLb</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <Identifier>_T2Username</Identifier>
+            <wps:Data>
+                <wps:LiteralData>bjanssen</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+    </wps:DataInputs>
+    <wps:ResponseForm>
+        <wps:ResponseDocument storeExecuteResponse="true" status="true">
+            <wps:Output mimeType="application/xml">
+                <Identifier>result_osd</Identifier>
+            </wps:Output>
+        </wps:ResponseDocument>
+    </wps:ResponseForm>
+</wps:Execute>
