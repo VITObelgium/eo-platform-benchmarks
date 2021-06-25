@@ -4,6 +4,7 @@ import json
 import urllib.parse
 from datetime import timedelta
 from os.path import abspath, dirname, join
+from time import sleep
 from typing import List
 
 import geojson
@@ -14,6 +15,8 @@ from shapely.geometry import shape
 
 from timeseries.histogram import create_histogram
 from timeseries.timer import Timer
+
+import xml.etree.ElementTree as ET
 
 config = configparser.ConfigParser()
 config.read('./config/dev.conf')
@@ -31,9 +34,11 @@ class BenchMark:
             content = content.replace('{{WORKFLOW_IDENTIFIER}}', self.params['wps']['workflow_id'])
             content = content.replace('{{PARAM_START}}', start)
             content = content.replace('{{PARAM_END}}', end)
-            content = content.replace('{{PARAM_BBOX}}',
-                                      ','.join(str(c) for c in bbox).replace(" ", "%20").replace(",", "%2C"))
-            content = content.replace('{{PARAM_GEOMETRY}}', urllib.parse.quote(json.dumps(feature)))
+            content = content.replace('{{PARAM_BBOX_LOWER}}',
+                                      ' '.join(str(c) for c in bbox[:2]))
+            content = content.replace('{{PARAM_BBOX_UPPER}}',
+                                      ' '.join(str(c) for c in bbox[2:]))
+            content = content.replace('{{PARAM_GEOMETRY}}', json.dumps(feature))
             content = content.replace('{{PARAM_FILTER}}', self.params['wps']['filter'])
             template.close()
         return content
@@ -47,7 +52,21 @@ class BenchMark:
             'Accept': 'text/xml'
         }
         resp = requests.post(wps_url, data=workflow_data, headers=headers)
-        return 1
+        return self.get_xml(resp.text)
+
+    def get_xml(self, text):
+        return ET.fromstring(text)
+
+    def get_status(self, doc):
+        url = doc.attrib['statusLocation']
+        status_txt = requests.get(url).text
+        resp = self.get_xml(status_txt)
+        print(resp[1][0])
+        if 'ProcessFailed' in resp[1][0].tag:
+            return 'FAILED'
+        elif 'ProcessStarted' not in resp[1][0].tag:
+            return 'DONE'
+        return 'RUNNING'
 
     def time_series(self):
 
@@ -65,11 +84,17 @@ class BenchMark:
 
             for i, f in enumerate(input_geojson.features):
                 file.write(f"Feature {i + 1}:\n\n")
-                temporal_extents = [["2021-06-05", "2021-06-10"]]
+                temporal_extents = [["2021-06-23", "2021-06-25"]]
                 for temporal_extent in temporal_extents:
                     file.write(f"{temporal_extent[0]} - {temporal_extent[1]}:\n\n")
                     try:
                         result = self.execute_workflow(start=temporal_extent[0], end=temporal_extent[1], feature=f)
+                        done = False
+                        while not done:
+                            status = self.get_status(result)
+                            file.write(f"Checking status for feature {i + 1} - {status}\n")
+                            done = status in ['DONE', 'FAILED']
+                            sleep(10)
                         file.write(f"{result}\n\n")
                     except Exception as e:
                         file.write(f"Failed to execute request: {e}\n\n")

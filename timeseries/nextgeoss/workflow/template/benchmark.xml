@@ -17,7 +17,10 @@
         <wps:Input>
             <ows:Identifier>qbbox</ows:Identifier>
             <wps:Data>
-                <wps:BoundingBoxData>{{PARAM_BBOX}}</wps:BoundingBoxData>
+                 <wps:BoundingBoxData crs="EPSG:4326" dimensions="2">
+                      <ows:LowerCorner>{{PARAM_BBOX_LOWER}}</ows:LowerCorner>
+                      <ows:UpperCorner>{{PARAM_BBOX_UPPER}}</ows:UpperCorner>
+                 </wps:BoundingBoxData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
@@ -32,23 +35,11 @@
                 <wps:LiteralData>{{PARAM_FILTER}}</wps:LiteralData>
             </wps:Data>
         </wps:Input>
-        <wps:Input>
-            <Identifier>_T2ApiKey</Identifier>
-            <wps:Data>
-                <wps:LiteralData>AKCp5bBh9WJnQLnAgtx5h5cyoZrBLTCMrbQURme5k8ZEypuZzxDKvkphq6piZFaWhY4wofCLb</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <Identifier>_T2Username</Identifier>
-            <wps:Data>
-                <wps:LiteralData>bjanssen</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
     </wps:DataInputs>
     <wps:ResponseForm>
         <wps:ResponseDocument storeExecuteResponse="true" status="true">
             <wps:Output mimeType="application/xml">
-                <Identifier>result_osd</Identifier>
+                 <ows:Identifier>result_osd</ows:Identifier>
             </wps:Output>
         </wps:ResponseDocument>
     </wps:ResponseForm>
