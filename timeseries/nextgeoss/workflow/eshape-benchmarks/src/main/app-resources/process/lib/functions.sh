@@ -73,7 +73,7 @@ function getosparams() {
         PARAMS_ARR=(${PARAMS//[&]/ })
         declare -A PARAM_MAPPING
 	PARAM_MAPPING['identifier']="{http://a9.com/-/opensearch/extensions/geo/1.0/}uid"
-        PARAM_MAPPING['timerange_start']="{http://a9.com/-/opensearch/extensions/time/1.0/}start"
+	PARAM_MAPPING['timerange_start']="{http://a9.com/-/opensearch/extensions/time/1.0/}start"
         PARAM_MAPPING['timerange_end']="{http://a9.com/-/opensearch/extensions/time/1.0/}end"
         PARAM_MAPPING['bbox']="{http://a9.com/-/opensearch/extensions/geo/1.0/}box"
         PARAM_MAPPING['count']="{http://a9.com/-/spec/opensearch/1.1/}count"
@@ -110,14 +110,17 @@ function main()
  
   local outputID=$(date '+%s')
 
-  # Setup some folder to store the input products
+  # Setup some folder to store the input products 
   local inputDir=${TMPDIR}/file-input
+  ciop-log "INFO" "Creating dir - ${inputDir}"
   mkdir -p ${inputDir}
 
   local processDir=${TMPDIR}/process-dir
+  ciop-log "INFO" "Creating dir - ${processDir}"
   mkdir -p ${processDir}
 
   local outputDir=${TMPDIR}/output-dir
+  ciop-log "INFO" "Creating dir - ${outputDir}"
   mkdir -p ${outputDir}
  
   params=$(getosparams $input)
