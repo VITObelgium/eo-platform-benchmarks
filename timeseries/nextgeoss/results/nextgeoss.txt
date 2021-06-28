@@ -1,0 +1,18 @@
+Running benchmark on nextgeoss:
+
+Feature 1:
+
+2018-03-20 - 2018-03-23:
+
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - RUNNING
+Checking status for feature 1 - FAILED
+Elapsed time for period: 0:01:20.667292
+
+Elapsed time for feature: 0:01:20.667317
+
