@@ -9,4 +9,7 @@ dependencies:
   - rasterstats
   - numpy
   - pip
+  - pip:
+    - --extra-index-url https://artifactory.vgt.vito.be/api/pypi/python-packages/simple
+    - terracatalogueclient
 prefix: /opt/anaconda/envs/benchmarks
