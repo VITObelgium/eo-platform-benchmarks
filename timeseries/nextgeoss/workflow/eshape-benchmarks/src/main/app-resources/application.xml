@@ -45,7 +45,7 @@
       }
     }
 	</parameter>
- 	<parameter id="filter" abstract="File filter used to calculate the statistics" title="Filter" scope="runtime">*_LAI_*M_V200.tif</parameter>
+ 	<parameter id="filter" abstract="File filter used to calculate the statistics" title="Filter" scope="runtime">*_NDVI_*M_V200.tif</parameter>
         </defaultParameters>
     </jobTemplate>
   </jobTemplates>
@@ -54,7 +54,7 @@
     <node id="node_process">
       <job id="template_process"/>
       <sources>
-      	<source refid="cas:series">https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=TERRASCOPE_SENTINEL_2_LAI_V2</source>
+      	<source refid="cas:series">https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=TERRASCOPE_SENTINEL_2_NDVI_V2</source>
       </sources>
     </node>
   </workflow>
