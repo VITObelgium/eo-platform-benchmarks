@@ -84,7 +84,7 @@ class BenchMark:
 
             for i, f in enumerate(input_geojson.features):
                 file.write(f"Feature {i + 1}:\n\n")
-                temporal_extents = [["2021-06-23", "2021-06-25"]]
+                temporal_extents = [["2018-03-20", "2018-03-23"]]
                 for temporal_extent in temporal_extents:
                     file.write(f"{temporal_extent[0]} - {temporal_extent[1]}:\n\n")
                     try:
@@ -95,7 +95,6 @@ class BenchMark:
                             file.write(f"Checking status for feature {i + 1} - {status}\n")
                             done = status in ['DONE', 'FAILED']
                             sleep(10)
-                        file.write(f"{result}\n\n")
                     except Exception as e:
                         file.write(f"Failed to execute request: {e}\n\n")
                     file.write(f"Elapsed time for period: {timedelta(seconds=t.split_period())}\n\n")
