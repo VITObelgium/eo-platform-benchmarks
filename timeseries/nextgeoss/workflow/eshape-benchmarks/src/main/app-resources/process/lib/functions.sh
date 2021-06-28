@@ -123,36 +123,40 @@ function main()
   ciop-log "INFO" "Creating dir - ${outputDir}"
   mkdir -p ${outputDir}
  
-  params=$(getosparams $input)
-  ciop-log "INFO" "Querying opensearch client with params $params"
-  enclosure="$(opensearch-client $params https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L2A enclosure)"
-
-  rm -rf ${inputDir}/$(basename ${enclosure}) 
-  inputProduct=$( ciop-copy -U -o ${inputDir} "${enclosure}" )     # -U = disable automatic decompression of zip - files
-  inputProduct="${inputProduct}$(basename ${enclosure})"
+  source activate benchmarks
  
-  ciop-log "INFO" "Downloaded product ${inputProduct} to ${inputDir}" 
-  [ $? -eq 0 ] && [ -e "${inputProduct}" ] || return ${ERR_NOINPUT}
+  ciop-lop "INFO" "Download products"
+  files="$(curl "$input" -L --insecure | xmllint --format - | grep '<atom:link .*rel="enclosure"' | sed -E 's/.*href="([^"]+)".*/\1/')" 
+  python ${_CIOP_APPLICATION_PATH}/process/download.py -o ${inputDir} -p ${files} 
+  
+  #params=$(getosparams $input)
+  #ciop-log "INFO" "Querying opensearch client with params $params"
+  #enclosure="$(curl "$input" -L --insecure | xmllint --format - | grep '<atom:link .*rel="enclosure"' | sed -E 's/.*href="([^"]+)".*/\1/')"
 
-  id=$([[ $input =~ .*identifier=(.*)\&? ]] && echo ${BASH_REMATCH[1]})
-  newProduct="$(dirname $inputProduct)/${id}.zip"
-
-  ciop-log "INFO" "Updating product ${inputProduct}  name to ${newProduct}"
-  mv ${inputProduct} ${newProduct} 
+  #inputProduct=$( ciop-copy -U -o ${inputDir} "${enclosure}" )     # -U = disable automatic decompression of zip - files
+  #inputProduct="${inputProduct}$(basename ${enclosure})"
  
-  ciop-log "INFO" "Unzipping ${newProduct}"
-  unzip -qq ${newProduct} -d $inputDir
+  #ciop-log "INFO" "Downloaded product ${inputProduct} to ${inputDir}" 
+  #[ $? -eq 0 ] && [ -e "${inputProduct}" ] || return ${ERR_NOINPUT}
+
+  #id=$([[ $input =~ .*identifier=(.*)\&? ]] && echo ${BASH_REMATCH[1]})
+  #newProduct="$(dirname $inputProduct)/${id}.zip"
+
+  #ciop-log "INFO" "Updating product ${inputProduct}  name to ${newProduct}"
+  #mv ${inputProduct} ${newProduct} 
+ 
+  #ciop-log "INFO" "Unzipping ${newProduct}"
+  #unzip -qq ${newProduct} -d $inputDir
   
   ciop-log "INFO" "Copy the input bands to process dir ${processDir}"   
   cp ${inputDir}/$(ciop-getparam filter) ${processDir}/
-
+  
   ciop-log "INFO" "Copying input geometry to file"
   echo $(ciop-getparam geojson) >> ${processDir}/feature.geojson
 
   ciop-log "INFO" "Process band information"
-  source activate benchmarks
   cd ${_CIOP_APPLICATION_PATH}/process
-  python run.py -d ${processDir} -f ".*jp2" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
+  python run.py -d ${processDir} -f ".*tif" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
  
   ciop-log "INFO" "Publishing results" 
   ciop-publish -m ${outputDir}/result_${outputID}.json

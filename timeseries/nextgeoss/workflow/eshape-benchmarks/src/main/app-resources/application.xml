@@ -5,8 +5,8 @@
       <streamingExecutable>/application/process/run.sh</streamingExecutable>
      	<defaultParameters>  
             <!-- OpenSearch query parameters -->
-            <parameter id="startdate" abstract="Start Date"   title="Start Date"   scope="runtime" type="opensearch" target="time:start">2021-06-23</parameter>
-            <parameter id="enddate"   abstract="End Date"     title="End Date"     scope="runtime" type="opensearch" target="time:end">2021-06-25</parameter>
+            <parameter id="startdate" abstract="Start Date"   title="Start Date"   scope="runtime" type="opensearch" target="time:start">2018-03-20</parameter>
+            <parameter id="enddate"   abstract="End Date"     title="End Date"     scope="runtime" type="opensearch" target="time:end">2018-03-23</parameter>
             <parameter id="qbbox"     abstract="Bounding Box" title="Bounding Box" scope="runtime" type="opensearch" target="geo:box">5.186920166015626,51.23548217222581,5.217475891113282,51.25009723956958</parameter>
             <parameter id="geojson"   abstract="GeoJSON to process" title="GeoJSON" scope="runtime">
    {
@@ -45,7 +45,7 @@
       }
     }
 	</parameter>
- 	<parameter id="filter" abstract="File filter used to calculate the statistics" title="Filter" scope="runtime">*SAFE/GRANULE/*/IMG_DATA/R10m/*B0[2,3,4]_10m.jp2</parameter>
+ 	<parameter id="filter" abstract="File filter used to calculate the statistics" title="Filter" scope="runtime">*_LAI_*M_V200.tif</parameter>
         </defaultParameters>
     </jobTemplate>
   </jobTemplates>
@@ -54,7 +54,7 @@
     <node id="node_process">
       <job id="template_process"/>
       <sources>
-      	<source refid="cas:series">https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=SENTINEL2_L2A</source>
+      	<source refid="cas:series">https://catalogue.nextgeoss.eu/opensearch/description.xml?osdd=TERRASCOPE_SENTINEL_2_LAI_V2</source>
       </sources>
     </node>
   </workflow>
