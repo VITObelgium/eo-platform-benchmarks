@@ -125,7 +125,7 @@ function main()
  
   source activate benchmarks
  
-  ciop-lop "INFO" "Download products"
+  ciop-log "INFO" "Download products"
   files="$(curl "$input" -L --insecure | xmllint --format - | grep '<atom:link .*rel="enclosure"' | sed -E 's/.*href="([^"]+)".*/\1/')" 
   python ${_CIOP_APPLICATION_PATH}/process/download.py -o ${inputDir} -p ${files} 
   
