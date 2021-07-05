@@ -123,11 +123,10 @@ function main()
   ciop-log "INFO" "Creating dir - ${outputDir}"
   mkdir -p ${outputDir}
  
-  source activate benchmarks
  
   ciop-log "INFO" "Download products"
   files="$(curl "$input" -L --insecure | xmllint --format - | grep '<atom:link .*rel="enclosure"' | sed -E 's/.*href="([^"]+)".*/\1/')" 
-  python ${_CIOP_APPLICATION_PATH}/process/download.py -o ${inputDir} -p ${files} 
+  /opt/anaconda/envs/benchmarks/bin/python ${_CIOP_APPLICATION_PATH}/process/download.py -o ${inputDir} -p ${files} 
   
   #params=$(getosparams $input)
   #ciop-log "INFO" "Querying opensearch client with params $params"
@@ -156,7 +155,7 @@ function main()
 
   ciop-log "INFO" "Process band information"
   cd ${_CIOP_APPLICATION_PATH}/process
-  python run.py -d ${processDir} -f ".*tif" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
+  /opt/anaconda/envs/benchmarks/bin/python run.py -d ${processDir} -f ".*tif" -g ${processDir}/feature.geojson -o ${outputDir}/result_${outputID}.json
  
   ciop-log "INFO" "Publishing results" 
   ciop-publish -m ${outputDir}/result_${outputID}.json
