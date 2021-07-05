@@ -25,6 +25,7 @@ function cleanExit ()
   case "${retval}" in
     ${SUCCESS}) msg="Processing successfully concluded";;
     ${ERR_PUBLISH}) msg="Failed to publish the results";;
+    ${ERR_NOINPUT}) msg="No input found";;
     *) msg="Unknown error";;
   esac
 
@@ -64,33 +65,6 @@ function pass_next_node()
   echo "${input}" | ciop-publish -s || return ${ERR_PUBLISH}
 }
 
-###############################################################################
-# Functions to retrieve the opensearch mapping
-###############################################################################
-function getosparams() {
-        URL=$1
-        PARAMS=${URL##*\?}
-        PARAMS_ARR=(${PARAMS//[&]/ })
-        declare -A PARAM_MAPPING
-	PARAM_MAPPING['identifier']="{http://a9.com/-/opensearch/extensions/geo/1.0/}uid"
-	PARAM_MAPPING['timerange_start']="{http://a9.com/-/opensearch/extensions/time/1.0/}start"
-        PARAM_MAPPING['timerange_end']="{http://a9.com/-/opensearch/extensions/time/1.0/}end"
-        PARAM_MAPPING['bbox']="{http://a9.com/-/opensearch/extensions/geo/1.0/}box"
-        PARAM_MAPPING['count']="{http://a9.com/-/spec/opensearch/1.1/}count"
-
-        COMMAND_PARAMS=""
-        for param in "${PARAMS_ARR[@]}"
-        do
-                p=(${param//[=]/ })
-
-                if [[ ! -z ${PARAM_MAPPING[${p[0]}]} ]]; then
-                        COMMAND_PARAMS+=" -p ${PARAM_MAPPING[${p[0]}]}=${p[1]}"
-                fi
-        done
-        echo $COMMAND_PARAMS
-
-}
-
 
 ###############################################################################
 # Main function to process an input reference
@@ -108,6 +82,12 @@ function main()
   # Log the input
   log_input ${input}
  
+  if test -z "$input"
+  then
+	ciop-log "ERROR" "No input products found"
+	cleanExit 50
+  fi  
+
   local outputID=$(date '+%s')
 
   # Setup some folder to store the input products 
@@ -128,30 +108,11 @@ function main()
   files="$(curl "$input" -L --insecure | xmllint --format - | grep '<atom:link .*rel="enclosure"' | sed -E 's/.*href="([^"]+)".*/\1/')" 
   /opt/anaconda/envs/benchmarks/bin/python ${_CIOP_APPLICATION_PATH}/process/download.py -o ${inputDir} -p ${files} 
   
-  #params=$(getosparams $input)
-  #ciop-log "INFO" "Querying opensearch client with params $params"
-  #enclosure="$(curl "$input" -L --insecure | xmllint --format - | grep '<atom:link .*rel="enclosure"' | sed -E 's/.*href="([^"]+)".*/\1/')"
-
-  #inputProduct=$( ciop-copy -U -o ${inputDir} "${enclosure}" )     # -U = disable automatic decompression of zip - files
-  #inputProduct="${inputProduct}$(basename ${enclosure})"
- 
-  #ciop-log "INFO" "Downloaded product ${inputProduct} to ${inputDir}" 
-  #[ $? -eq 0 ] && [ -e "${inputProduct}" ] || return ${ERR_NOINPUT}
-
-  #id=$([[ $input =~ .*identifier=(.*)\&? ]] && echo ${BASH_REMATCH[1]})
-  #newProduct="$(dirname $inputProduct)/${id}.zip"
-
-  #ciop-log "INFO" "Updating product ${inputProduct}  name to ${newProduct}"
-  #mv ${inputProduct} ${newProduct} 
- 
-  #ciop-log "INFO" "Unzipping ${newProduct}"
-  #unzip -qq ${newProduct} -d $inputDir
-  
   ciop-log "INFO" "Copy the input bands to process dir ${processDir}"   
   cp ${inputDir}/$(ciop-getparam filter) ${processDir}/
   
   ciop-log "INFO" "Copying input geometry to file"
-  echo $(ciop-getparam geojson) >> ${processDir}/feature.geojson
+  echo $(ciop-getparam geojson) > ${processDir}/feature.geojson
 
   ciop-log "INFO" "Process band information"
   cd ${_CIOP_APPLICATION_PATH}/process
@@ -159,4 +120,9 @@ function main()
  
   ciop-log "INFO" "Publishing results" 
   ciop-publish -m ${outputDir}/result_${outputID}.json
+
+  ciop-log "INFO" "Cleaning up dirs"
+  rm -rf ${inputDir}
+  rm -rf ${processDir}
+  rm -rf ${outputDir}
 }
