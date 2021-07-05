@@ -39,7 +39,7 @@
     <wps:ResponseForm>
         <wps:ResponseDocument storeExecuteResponse="true" status="true">
             <wps:Output mimeType="application/xml">
-                 <ows:Identifier>result_osd</ows:Identifier>
+                 <ows:Identifier>result_distribution</ows:Identifier>
             </wps:Output>
         </wps:ResponseDocument>
     </wps:ResponseForm>

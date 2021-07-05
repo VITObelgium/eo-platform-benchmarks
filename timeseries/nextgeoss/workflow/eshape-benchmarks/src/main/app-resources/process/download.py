@@ -26,4 +26,3 @@ if __name__ == '__main__':
     basename = args.products[0].split('/')[9]
     for product in args.products:
         catalogue.download_file(ProductFile(href=product, length=None), args.output)
-    print(basename)

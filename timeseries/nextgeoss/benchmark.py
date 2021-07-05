@@ -1,7 +1,7 @@
-import base64
 import configparser
 import json
-import urllib.parse
+import logging
+import xml.etree.ElementTree as ET
 from datetime import timedelta
 from os.path import abspath, dirname, join
 from time import sleep
@@ -10,16 +10,23 @@ from typing import List
 import geojson
 import requests
 from fire import Fire
-from owslib.wps import WebProcessingService
 from shapely.geometry import shape
 
 from timeseries.histogram import create_histogram
 from timeseries.timer import Timer
 
-import xml.etree.ElementTree as ET
-
 config = configparser.ConfigParser()
 config.read('./config/dev.conf')
+
+result_path = './results/nextgeoss'
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s [%(levelname)s] %(message)s',
+                    handlers=[
+                        logging.FileHandler(f'{result_path}.txt',  mode='w'),
+                        logging.StreamHandler()
+                    ]
+                    )
 
 
 class BenchMark:
@@ -61,58 +68,78 @@ class BenchMark:
         url = doc.attrib['statusLocation']
         status_txt = requests.get(url).text
         resp = self.get_xml(status_txt)
-        print(resp[1][0])
         if 'ProcessFailed' in resp[1][0].tag:
             return 'FAILED'
-        elif 'ProcessStarted' not in resp[1][0].tag:
+        elif 'ProcessSucceeded' in resp[1][0].tag:
             return 'DONE'
         return 'RUNNING'
 
+    def download_results(self, doc):
+        # Get status XML
+        url = doc.attrib['statusLocation']
+        status_txt = requests.get(url).text
+        resp = self.get_xml(status_txt)
+
+        # Download metalink
+        metalink_url = resp[2][0][2][0][0].get('href')
+        metalink_txt = requests.get(metalink_url).text
+        metalink_resp = self.get_xml(metalink_txt)
+
+        # Download results
+        result = list()
+        for file in metalink_resp[0]:
+            result.append(requests.get(file[0][0].text).json())
+        return result
+
     def time_series(self):
+        logging.info(f'Running benchmark on nextgeoss:')
+        with open(join(abspath(dirname(dirname(__file__))), 'nextgeoss', 'workflow', 'samples', 'sample.json')) as f:
+            input_geojson = geojson.load(f)
 
-        result_path = f"./results/nextgeoss"
+        t = Timer()
+        t.start()
 
-        with open(f"{result_path}.txt", "w+") as file:
-            file.write(f"Running benchmark on nextgeoss:\n\n")
+        for i, f in enumerate(input_geojson.features):
+            logging.info(f'Feature {i + 1}:')
+            temporal_extents = [['2018-01-01', '2018-02-01']]
+            for temporal_extent in temporal_extents:
 
-            with open(
-                    join(abspath(dirname(dirname(__file__))), 'nextgeoss', 'workflow', 'samples', 'sample.json')) as f:
-                input_geojson = geojson.load(f)
+                # Execute workflow
+                logging.info(f'{temporal_extent[0]} - {temporal_extent[1]}:')
+                try:
+                    result = self.execute_workflow(start=temporal_extent[0], end=temporal_extent[1], feature=f)
+                    done = False
+                    while not done:
+                        sleep(5)
+                        status = self.get_status(result)
+                        logging.debug(f'Checking status for feature {i + 1} - {status}')
+                        done = status in ['DONE', 'FAILED']
+                except Exception as e:
+                    logging.error(f"Failed to execute request: {e}")
+                logging.info(f'Elapsed time for period: {timedelta(seconds=t.split_period())}')
 
-            t = Timer()
-            t.start()
-
-            for i, f in enumerate(input_geojson.features):
-                file.write(f"Feature {i + 1}:\n\n")
-                temporal_extents = [["2018-03-20", "2018-03-23"]]
-                for temporal_extent in temporal_extents:
-                    file.write(f"{temporal_extent[0]} - {temporal_extent[1]}:\n\n")
+                # Dowload the results
+                if status == 'DONE':
                     try:
-                        result = self.execute_workflow(start=temporal_extent[0], end=temporal_extent[1], feature=f)
-                        done = False
-                        while not done:
-                            status = self.get_status(result)
-                            file.write(f"Checking status for feature {i + 1} - {status}\n")
-                            done = status in ['DONE', 'FAILED']
-                            sleep(10)
+                        logging.info(f'Downloading the results')
+                        logging.info(f'{self.download_results(result)}')
                     except Exception as e:
-                        file.write(f"Failed to execute request: {e}\n\n")
-                    file.write(f"Elapsed time for period: {timedelta(seconds=t.split_period())}\n\n")
+                        logging.error(f'Failed to download results: {e}')
 
-                file.write(f"Elapsed time for feature: {timedelta(seconds=t.split_feature())}\n\n")
+            logging.info(f'Elapsed time for feature: {timedelta(seconds=t.split_feature())}')
 
-            timings = t.stop()
+        timings = t.stop()
 
-            file.write(f"Total elapsed time: {timedelta(seconds=timings['elapsed_time'])}\n\n")
+        logging.info(f'Total elapsed time: {timedelta(seconds=timings["elapsed_time"])}')
 
-            file.write("Statistics:\n\n")
-            file.write(f"Min: {timedelta(seconds=timings['stats']['min'])}\n")
-            file.write(f"Max: {timedelta(seconds=timings['stats']['max'])}\n")
-            file.write(f"Mean: {timedelta(seconds=timings['stats']['mean'])}\n")
-            file.write(f"StDev: {timedelta(seconds=timings['stats']['stdev'])}\n")
+        logging.info('Statistics:')
+        logging.info(f'Min: {timedelta(seconds=timings["stats"]["min"])}')
+        logging.info(f'Max: {timedelta(seconds=timings["stats"]["max"])}')
+        logging.info(f'Mean: {timedelta(seconds=timings["stats"]["mean"])}')
+        logging.info(f'StDev: {timedelta(seconds=timings["stats"]["stdev"])}')
 
-            create_histogram(result_path, timings['feature_timings'])
+        create_histogram(result_path, timings['feature_timings'])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     Fire(BenchMark(config).time_series)
