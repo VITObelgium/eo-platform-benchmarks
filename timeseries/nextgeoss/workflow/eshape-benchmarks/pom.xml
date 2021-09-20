@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.terradue</groupId>
+  <groupId>be.vito</groupId>
   <artifactId>eshape-benchmarks</artifactId>
   <packaging>pom</packaging>
   <name>eshape-benchmarks</name>
@@ -11,10 +11,10 @@
     <version>2.0.0</version>
   </parent>
   <description>This is a short description</description>
-  <version>0.1</version>
+  <version>0.4-SNAPSHOT</version>
   <properties>
-    <summary>This is a summary</summary>
-    <description>This is a short description</description>
+    <summary>EO platform benchmarking tests</summary>
+    <description>This is a code workflow to execute some platform benchmarks in the context of the eShape project</description>
     <community>community</community>
     <yumRepo>community</yumRepo>
   </properties>
@@ -28,10 +28,10 @@
     <profile>
       <id>package-app</id>
       <activation>
-         <property>
-           <name>env</name>
-           <value>ci</value>
-         </property>
+        <property>
+          <name>env</name>
+          <value>ci</value>
+        </property>
       </activation>
       <build>
         <plugins>
@@ -48,7 +48,9 @@
                   <!-- Set here the dependencies installed with 'sudo yum install'-->
                   <requires>
                     <require>bash</require>
+                    <require>miniconda</require>
                   </requires>
+                  <script>conda update conda -y &amp;&amp; conda env create --file /application/dependencies/environment.yml</script>
                 </configuration>
               </execution>
             </executions>
