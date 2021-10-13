@@ -12,13 +12,15 @@ import requests
 from fire import Fire
 from shapely.geometry import shape
 
+import re
+
 from timeseries.histogram import create_histogram
 from timeseries.timer import Timer
 
 config = configparser.ConfigParser()
-config.read('./config/dev.conf')
+config.read('./config/prod_onda.conf')
 
-result_path = './results/nextgeoss'
+result_path = config['wps']['results']
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -33,6 +35,11 @@ class BenchMark:
 
     def __init__(self, params):
         self.params = params
+        self.proxies = {}
+        if 'proxies' in params:
+            self.proxies = {
+                'http': params['proxies']['http']
+            }
 
     def read_workflow_template(self, start: str, end: str, bbox: List[float], feature: dict):
         content = ''
@@ -52,21 +59,21 @@ class BenchMark:
 
     def execute_workflow(self, start, end, feature):
         bounds = shape(feature["geometry"]).bounds
-        wps_url = '{}?service=WPS&version=1.0.0&request=execute'.format(self.params['wps']['base'])
+        wps_url = '{}/WebProcessingService?service=WPS&version=1.0.0&request=execute'.format(self.params['wps']['base'])
         workflow_data = self.read_workflow_template(start, end, bounds, feature)
         headers = {
             'Content-Type': 'text/xml',
             'Accept': 'text/xml'
         }
-        resp = requests.post(wps_url, data=workflow_data, headers=headers)
+        resp = requests.post(wps_url, data=workflow_data, headers=headers, proxies=self.proxies)
         return self.get_xml(resp.text)
 
     def get_xml(self, text):
         return ET.fromstring(text)
 
     def get_status(self, doc):
-        url = doc.attrib['statusLocation']
-        status_txt = requests.get(url).text
+        url = re.sub(r'http:.*wps', self.params['wps']['base'], doc.attrib['statusLocation'])
+        status_txt = requests.get(url, proxies=self.proxies).text
         resp = self.get_xml(status_txt)
         if 'ProcessFailed' in resp[1][0].tag:
             return 'FAILED'
@@ -76,19 +83,19 @@ class BenchMark:
 
     def download_results(self, doc):
         # Get status XML
-        url = doc.attrib['statusLocation']
-        status_txt = requests.get(url).text
+        url = re.sub(r'http:.*wps', self.params['wps']['base'], doc.attrib['statusLocation'])
+        status_txt = requests.get(url, proxies=self.proxies).text
         resp = self.get_xml(status_txt)
 
         # Download metalink
         metalink_url = resp[2][0][2][0][0].get('href')
-        metalink_txt = requests.get(metalink_url).text
+        metalink_txt = requests.get(metalink_url, proxies=self.proxies).text
         metalink_resp = self.get_xml(metalink_txt)
 
         # Download results
         result = list()
         for file in metalink_resp[0]:
-            result.append(requests.get(file[0][0].text).json())
+            result.append(requests.get(file[0][0].text, proxies=self.proxies).json())
         return result
 
     def time_series(self):
