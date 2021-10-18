@@ -14,6 +14,8 @@ from shapely.geometry import shape
 
 import re
 
+import os
+
 from timeseries.histogram import create_histogram
 from timeseries.timer import Timer
 
@@ -100,15 +102,16 @@ class BenchMark:
 
     def time_series(self):
         logging.info(f'Running benchmark on nextgeoss:')
-        with open(join(abspath(dirname(dirname(__file__))), 'nextgeoss', 'workflow', 'samples', 'sample.json')) as f:
+        with open(os.path.join(abspath(dirname(dirname(__file__))), config['wps']['samples'])) as f:
             input_geojson = geojson.load(f)
 
         t = Timer()
         t.start()
 
+        logging.info(f'Benchmarking with {len(input_geojson.features)} features')
         for i, f in enumerate(input_geojson.features):
             logging.info(f'Feature {i + 1}:')
-            temporal_extents = [['2018-01-01', '2018-02-01']]
+            temporal_extents = [['2019-01-01', '2019-02-01']]
             for temporal_extent in temporal_extents:
 
                 # Execute workflow
