@@ -20,7 +20,7 @@ from timeseries.histogram import create_histogram
 from timeseries.timer import Timer
 
 config = configparser.ConfigParser()
-config.read('./config/prod_onda.conf')
+config.read('./config/prod_cesnet.conf')
 
 result_path = config['wps']['results']
 
