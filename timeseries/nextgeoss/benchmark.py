@@ -97,8 +97,13 @@ class BenchMark:
         # Download results
         result = list()
         for file in metalink_resp[0]:
-            result.append(requests.get(file[0][0].text, proxies=self.proxies).json())
-        return result
+            date_result = requests.get(file[0][0].text, proxies=self.proxies).json()
+            result.append({
+                'date': date_result['date'][0],
+                'stat': date_result['stats'][0],
+                'time': date_result['time']
+            })
+        return sorted(result, key=lambda x:x['date'])
 
     def time_series(self):
         logging.info(f'Running benchmark on nextgeoss:')
@@ -111,7 +116,7 @@ class BenchMark:
         logging.info(f'Benchmarking with {len(input_geojson.features)} features')
         for i, f in enumerate(input_geojson.features):
             logging.info(f'Feature {i + 1}:')
-            temporal_extents = [['2019-01-01', '2019-02-01']]
+            temporal_extents = [['2019-01-01', '2019-10-31']]
             for temporal_extent in temporal_extents:
 
                 # Execute workflow
